@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+
+        <style>
+
+        </style>
+
+        <!-- colyseus.js client -->
+        <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
+    </head>
+    <body>
+        <h1> The Pandemic Game Lobby Room </h1>
+
+        <button onclick="createGame()">Create Game</button>
+        <button onclick="leaveGame()">Leave Game</button>
+        <button onclick="joinLobby()">Show Games</button>
+        <button onclick="leave()">Leave Lobby</button>
+
+        <h2>All rooms:</h2>
+        <ul id="all_rooms"></ul>
+
+        <div id="messages"></div>
+        
+
+        <script>
+            var host = window.document.location.host.replace(/:.*/, '');
+            var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
+            var lobby;
+            var room;
+
+            function createGame () {
+                console.log("Create Game");
+                client.create("game", {} ).then(room => {
+                    console.log("created successfully", room);
+                }).catch(e => {
+                    console.error("create error", e);
+                });
+            }
+            
+            // Create or join the lobby to show all games
+            function joinLobby () {
+            // Logged into your app and Facebook.
+            client.joinOrCreate("lobby").then(room_instance => {
+                lobby = room_instance;
+                onjoin();
+                console.log("Joined lobby room!");
+    
+            }).catch(e => {
+                console.error("Error", e);
+            });
+            }
+    
+            function onjoin() {
+                lobby.onMessage("rooms", (rooms) => {
+                    allRooms = rooms;
+                    update_full_list();
+    
+                    console.log("Received full list of rooms:", allRooms);
+                });
+    
+                lobby.onMessage("+", ([roomId, room]) => {
+                    const roomIndex = allRooms.findIndex((room) => room.roomId === roomId);
+                    if (roomIndex !== -1) {
+                        console.log("Room update:", room);
+                        allRooms[roomIndex] = room;
+    
+                    } else {
+                        console.log("New room", room);
+                        allRooms.push(room);
+                    }
+                    update_full_list();
+                });
+    
+                lobby.onMessage("-", (roomId) => {
+                    console.log("Room removed", roomId);
+                    allRooms = allRooms.filter((room) => room.roomId !== roomId);
+                    update_full_list();
+                });
+    
+                lobby.onLeave(() => {
+                    allRooms = [];
+                    update_full_list();
+                    console.log("Bye, bye!");
+                });
+            }
+    
+            function update_full_list() {
+            var el = document.getElementById('all_rooms');
+            el.innerHTML = allRooms.map(function(room) {
+                 
+                return "<li><code>" + JSON.stringify(room) + "</code></li>" +
+                "<button type='button' id='"+room.roomId+"' class='btn btn-primary' onclick='joinRoom(this.id)' >Join Game</button>";
+            }).join("\n");
+    
+            }
+
+            function joinRoom (roomId) {
+
+                // Check to see if the room id is in storage
+                var roomId_s = localStorage.getItem("roomId");
+                var sessionId = localStorage.getItem("sessionId");
+
+                console.log("roomId in storage is: " + roomId_s);
+
+                // If so, try to reconnect
+                if (roomId == roomId_s){
+                    console.log("room id was found in storage");
+                    
+
+                    client.reconnect(roomId, sessionId).then(room_instance => {
+                        room = room_instance;
+
+                        localStorage.setItem("roomId", room.id);
+                        localStorage.setItem("sessionId", room.sessionId);
+
+                        console.log("reconnected successfully");
+                    }).catch(e => {
+                        console.log("error reconnecting");
+                        console.error("Error", e);
+                        joinById( roomId);
+                    });
+                } else {
+                    //If roomId is not in storage, try to join normally
+                    joinById (roomId);
+                }
+
+                console.log("Joined room")
+
+            }
+
+            function joinById (roomId) {
+                client.joinById(roomId, {} ).then(room_instance => {
+                    console.log("joined succesfully", room_instance);
+                    room = room_instance;
+
+                    localStorage.setItem("roomId", room.id);
+                    localStorage.setItem("sessionId", room.sessionId);
+                }).catch(e => {
+                    console.error("join error", e);
+                });
+            }
+            
+            function leaveGame () {
+                room.leave();
+            }
+            function leave() {
+            if (lobby) {
+                lobby.leave();
+    
+            } else {
+                console.warn("Not connected.");
+            }
+            }
+        </script>
+    </body>
+    
+</html>
