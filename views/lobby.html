@@ -18,6 +18,12 @@
         <button onclick="joinLobby()">Show Games</button>
         <button onclick="leave()">Leave Lobby</button>
 
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="showPlayers()">Show Players</button>
+
+        <input type="text" id="sessionid">
+        <button onclick="interact()">Interact</button>
+
         <h2>All rooms:</h2>
         <ul id="all_rooms"></ul>
 
@@ -29,6 +35,18 @@
             var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
             var lobby;
             var room;
+
+            function interact() {
+                var other_guy = document.getElementById("sessionid").value;
+                console.log(other_guy);
+                room.send("interact", {sessionId: other_guy })
+            }
+            function showPlayers() {
+                room.send("showPlayers", {});
+            }
+            function startGame() {
+                room.send("startGame", {y: -1});
+            }
 
             function createGame () {
                 console.log("Create Game");

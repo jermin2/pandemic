@@ -15,6 +15,18 @@ export class MyRoom extends Room {
       //
     });
 
+    this.onMessage("startGame", (client, message) => {
+      this.state.startGame();
+    })
+
+    this.onMessage("showPlayers", (client, message) => {
+      this.state.showPlayers();
+    })
+
+    this.onMessage("interact", (client, data) => {
+      this.state.playerInteract(client.sessionId, data.sessionId)
+    })
+
   }
 
   onJoin (client: Client, options: any) {
