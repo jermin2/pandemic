@@ -10,13 +10,13 @@ export class MyRoom extends Room {
     this.setState(new MyRoomState());
 
     this.onMessage("type", (client, message) => {
-      //
-      // handle "type" message
-      //
     });
 
     this.onMessage("startGame", (client, message) => {
+      console.log("Room locked, no new players can enter");
+      this.lock();
       this.state.startGame();
+      
     })
 
     this.onMessage("showPlayers", (client, message) => {
@@ -24,9 +24,19 @@ export class MyRoom extends Room {
     })
 
     this.onMessage("interact", (client, data) => {
-      this.state.playerInteract(client.sessionId, data.sessionId)
+      var r = this.state.playerInteract(client.sessionId, data.sessionId)
+      if(r){ //only broadcast if you contacted a player
+        this.broadcast("interact", { player1: client.sessionId, player2: data.sessionId });
+      }
+      
+      // is there a way to check if this returned anything?
+      //this.broadcast(client.sessionId, "this is a private message");
     })
 
+  }
+
+  onAuth(client: Client, options: any, req: any){
+    return true;
   }
 
   onJoin (client: Client, options: any) {

@@ -13,17 +13,21 @@
     <body>
         <h1> The Pandemic Game Lobby Room </h1>
 
+        <button onclick="createGame()">Create Game</button>
+        <button onclick="leaveGame()">Leave Game</button>
+        <button onclick="joinLobby()">Show Games</button>
+        <button onclick="restartServer()">Restart Server</button>
+        <button onclick="leave()">Leave Lobby</button>
+
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="showPlayers()">Show Players</button>
+
+        <input type="text" id="sessionid">
+        <button onclick="interact()">Interact</button>
+
         <h2>All rooms:</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Game name</th>
-                    <th>CLients</th>
-                    <th>Join</th>
-                </tr>
-            </thead>
-            <tbody id="all_rooms"></tbody>
-        </table>
+        <ul id="all_rooms"></ul>
+
         <div id="messages"></div>
         
 
@@ -32,11 +36,36 @@
             var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
             var lobby;
             var room;
+            var allRooms;
 
             function interact() {
                 var other_guy = document.getElementById("sessionid").value;
                 console.log(other_guy);
                 room.send("interact", {sessionId: other_guy })
+            }
+            function showPlayers() {
+                room.send("showPlayers", {});
+            }
+            function startGame() {
+                room.send("startGame", {y: -1});
+            }
+
+            function restartServer() {
+                //for each room
+                console.log(allRooms);
+                allRooms.forEach( r=>
+                    console.log(r.roomId)
+                );
+                
+            }
+
+            function createGame () {
+                console.log("Create Game");
+                client.create("game", {} ).then(room => {
+                    console.log("created successfully", room);
+                }).catch(e => {
+                    console.error("create error", e);
+                });
             }
             
             // Create or join the lobby to show all games
@@ -89,9 +118,9 @@
             function update_full_list() {
             var el = document.getElementById('all_rooms');
             el.innerHTML = allRooms.map(function(room) {
-                 return "<tr><td> " + room.name + " </td><td> " + room.clients + " </td><td> " +  
-                 "<button type='button' id='"+room.roomId+"' class='btn btn-primary' onclick='joinRoom(this.id)' >Join Game</button> " +
-                 "</tr>";
+                 
+                return "<li><code>" + JSON.stringify(room) + "</code></li>" +
+                "<button type='button' id='"+room.roomId+"' class='btn btn-primary' onclick='joinRoom(this.id)' >Join Game</button>";
             }).join("\n");
     
             }
@@ -106,7 +135,7 @@
 
                 // If so, try to reconnect
                 if (roomId == roomId_s){
-                    console.log("room id was found in storage - attempting reconnect");
+                    console.log("room id was found in storage");
                     
 
                     client.reconnect(roomId, sessionId).then(room_instance => {
@@ -116,9 +145,8 @@
                         localStorage.setItem("sessionId", room.sessionId);
 
                         console.log("reconnected successfully");
-                        window.location.href = "/game";
                     }).catch(e => {
-                        console.log("Reconnect Failed - attempting to join with new session");
+                        console.log("error reconnecting");
                         console.error("Error", e);
                         joinById( roomId);
                     });
@@ -127,22 +155,17 @@
                     joinById (roomId);
                 }
 
-                console.log("Something went wrong");
-
-                
+                console.log("Joined room")
 
             }
 
             function joinById (roomId) {
                 client.joinById(roomId, {} ).then(room_instance => {
-                    
                     console.log("joined succesfully", room_instance);
                     room = room_instance;
 
                     localStorage.setItem("roomId", room.id);
                     localStorage.setItem("sessionId", room.sessionId);
-                    console.log("new session id is: " + room.sessionId);
-                    window.location.href = "/game";
                 }).catch(e => {
                     console.error("join error", e);
                 });
@@ -159,8 +182,6 @@
                 console.warn("Not connected.");
             }
             }
-
-            joinLobby();
         </script>
     </body>
     

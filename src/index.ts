@@ -35,8 +35,18 @@ app.engine('html', require('ejs').renderFile);
 
 app.use(express.static('./'));
 
-app.get('/', function(req, res) {
+
+
+app.use('/lobby', function(req, res) {
   res.render('lobby.html');
+})
+
+app.use('/game', function(req,res) {
+  res.render('game.html');
+})
+
+app.get('/admin', function(req, res) {
+  res.render('admin.html');
 });
 
 app.get('/test', function(req, res) {
@@ -51,6 +61,10 @@ app.get('/test', function(req, res) {
 
 // register colyseus monitor AFTER registering your room handlers
 app.use("/colyseus", monitor());
+
+app.use('/', function(req, res) {
+  res.render('index.html');
+})
 
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${ port }`)

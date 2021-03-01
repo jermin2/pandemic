@@ -9,36 +9,23 @@
 <body>
     <h1>Pandemic</h1>
 
-    <div> Rooms</div>
+    <div>Enter Name</div>
 
+    
     <input type="text" id="name">
-    <button type="button" class="btn btn-primary">Join Room</button>
+    <button type="button" class="btn btn-primary" onclick="findGames()">Find Games</button>
 
-    <div id="messages"></div>
     <script>
-        var host = window.document.location.host.replace(/:.*/, '');
-        var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':'+location.port : ''));
-    
-        client.joinOrCreate("game").then(room => {
-            console.log("joined");
-            room.onStateChange.once(function(state) {
-                console.log("initial room state: ", state);
-            });
+        function findGames() {
+            var name = document.getElementById("name").value;
+            if (name.length < 1){
+                throw new Error ("Name must be longer than 1");
+            }
+            localStorage.setItem("name", name);
+            console.log(name);
+            window.location.href = "/lobby";
+        }
 
-            // new room state
-            room.onStateChange(function(state) {
-                // triggered on each patch
-            });
-
-            //listen to patches coming from the server
-            room.onMessage("messages", function(message) {
-                var p = document.createElement("p");
-                p.innerText = message;
-                document.querySelector("#messages").appendChild(p);
-            });
-        })
-    
-    
     </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
+import { Client } from "colyseus.js";
 
 export class Player extends Schema{
   @type("number")
@@ -6,6 +7,12 @@ export class Player extends Schema{
 
   @type("number")
   infected: number = 0;
+
+  @type("string")
+  name: string = "";
+
+  @type("string")
+  owner: string; //contains the sessionId of the player
 }
 
 export class MyRoomState extends Schema {
@@ -22,6 +29,18 @@ export class MyRoomState extends Schema {
   @type("number")
   startingInfected: number = 1;
 
+  player_interacts = new Set();
+
+  // Returns the value to put in the Set
+  getSetValue(sessionId: string, sessionId_2:string){
+    //compare the two sessionIds, and put one before the other
+    if(sessionId.localeCompare(sessionId_2) > 0){
+      return sessionId.concat(sessionId_2);
+    } else{
+      return sessionId_2.concat(sessionId);
+    }
+  }
+
   createPlayer(sessionId: string) {
     this.players.set(sessionId, new Player());
   }
@@ -32,9 +51,25 @@ export class MyRoomState extends Schema {
 
   playerInteract(sessionId: string, sessionId_2: string){
 
+    if(sessionId == sessionId_2) return false // Can't touch yourself
+
+    var k = this.getSetValue(sessionId, sessionId_2);
+    if(this.player_interacts.has(k)){
+      //They have already interacted, don't do anything
+      return false;
+    }
+
+    // If one player is infected and the other is normal, the normal is now infected
+    // If the normal player had a vaccine, then the other player becomes normal
+    // if both players are normal, then vaccine is created
+    // if both players are infected, then nothing happens
+
+    this.gameState = "inProgress";
     try{
       let player1 = this.players.get(sessionId);
       let player2 = this.players.get(sessionId_2);
+
+      this.player_interacts.add(k); // Add interaction to the set so they can't interact again
 
       // if one player is infect, the other is also infected
       if (player1.infected == 0){ //if player1 is normal
@@ -55,24 +90,26 @@ export class MyRoomState extends Schema {
         }
       } else if (player1.infected == 1){
         //assume player2 is not infected and player1 is infected
-        player2.infected = 1; // player2 becomes infected
-        console.log(sessionId_2 + " got infected");
-  
-        if(player2.vaccines > 0){
-          player1.infected = 0; //player1 gets cured
-          player2.vaccines--;
+        if(player2.infected == 0){
+          player2.infected = 1; // player2 becomes infected
+          console.log(sessionId_2 + " got infected");
+
+          if(player2.vaccines > 0){
+            player1.infected = 0; //player1 gets cured
+            player2.vaccines--;
+          }
         }
+        console.log(sessionId_2 + " and " + sessionId + " are both already infected");
       }
+
+      return true;
 
     } catch (e) {
       console.log(e);
+      // Invalid sessionId
+      return false;
     }
 
-    
-    // // If the normal player had a vaccine, then the other player becomes normal
-    // if both players are normal, then vaccine is created
-    // if both players are infected, then nothing happens
-    console.log("something happened");
   }
 
   setInfected(num: number) {
@@ -98,6 +135,8 @@ export class MyRoomState extends Schema {
 
       //console.log(a);
     }
+    this.gameState = "started";
+    
   }
 
   showPlayers(){

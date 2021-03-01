@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+
+        <style>
+            div.hidden {
+                display: none;
+            }
+        </style>
+
+        <!-- colyseus.js client -->
+        <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
+    </head>
+    <body>
+        <h1> The Pandemic Game</h1>
+
+        <h2 id="sessionIdHolder">ID:</h2>
+
+        <div id="waiting_message">
+            Waiting for Game to Start
+        </div>
+
+        <div class="hidden" id="initial_status_section">
+            <h2>YOU ARE</h2>
+            <h2 id="initial_status">INFECTED</h2>
+            <button type="button" onclick="hide_initial_status()">OK</button>
+        </div>
+
+        <div class="hidden" id="main">
+            <div id="qrcode">
+                QR CODE HERE
+            </div>
+            or
+            <div id="manual_entry">
+                <input type="text" id="qr_entry">
+                <button type="button" onclick="interact()">Touch</button>
+            </div>
+        </div>>
+            
+
+        Messages:
+        <div id="messages"></div>
+        
+
+        <script>
+            var host = window.document.location.host.replace(/:.*/, '');
+            var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
+            var lobby;
+            var room;
+
+            var sessionId;
+            var player_name;
+            var roomId;
+
+            function hide_initial_status() {
+                document.getElementById("initial_status_section").classList.add("hidden");
+                document.getElementById("main").classList.remove("hidden");
+            }
+
+            function interact() {
+                var other_guy = document.getElementById("qr_entry").value;
+                room.send("interact", {sessionId: other_guy })
+                document.getElementById("qr_entry").value = "";
+            }
+            
+
+            function joinRoom (roomId) {
+
+                // Check to see if the room id is in storage
+                var roomId_s = localStorage.getItem("roomId");
+                var sessionId = localStorage.getItem("sessionId");
+
+                console.log("roomId in storage is: " + roomId_s);
+
+                // If so, try to reconnect
+                if (roomId == roomId_s){
+                    console.log("room id was found in storage, attempting reconnect");
+                    
+                    
+                    client.reconnect(roomId, sessionId).then(room_instance => {
+                        room = room_instance;
+
+                        localStorage.setItem("roomId", room.id);
+                        localStorage.setItem("sessionId", room.sessionId);
+                        sessionId = room.sessionId;
+
+                        console.log("reconnected successfully");
+
+                        // Listen to patches from server
+                        room.onStateChange((state) => {
+                            console.log("the room state has been updated:", state);
+                            if (state.gameState == "started"){
+                                // change the waiting for game to start to hidden
+                                document.getElementById("waiting_message").classList.add("hidden");
+
+                                var infected = (room.state.players.get(sessionId).infected == 1);
+                                console.log(infected);
+                                // Show the initial status
+                                document.getElementById("initial_status").innerText = infected?"INFECTED":"NORMAL";
+                                document.getElementById("initial_status_section").classList.remove("hidden");
+                            }
+                            if (state.gameState == "inProgress"){
+                                // handle reconnect
+                                document.getElementById("waiting_message").classList.add("hidden");
+                                document.getElementById("initial_status_section").classList.add("hidden");
+                                document.getElementById("main").classList.remove("hidden");
+                            }
+
+                        });
+
+                        room.onMessage("interact", (message) => {
+                            var m;
+                            if(message.player1 == sessionId){
+                                m = message.player2;
+                            }
+                            else if(message.player2 == sessionId){
+                                m = message.player1;
+                            } else return;
+                            var p = document.createElement("p");
+                            p.innerText = "You contacted " + m;
+                            document.getElementById("messages").appendChild(p);
+                        })
+
+                        room.onMessage(sessionId, (message) => {
+                            var p = document.createElement("p");
+                            console.log(message)
+                            p.innerText = message;
+                            document.getElementById("messages").appendChild(p);
+                        })
+
+
+                    }).catch(e => {
+                        console.log("Reconnect Failed");
+                        console.error("Error", e);
+                    });
+                } else {
+                    //If roomId is not in storage, try to join normally
+                }
+
+                console.log("Joined room")
+
+            }
+
+            
+
+            function reconnect(){
+                try {
+                    var roomId_s = localStorage.getItem("roomId");
+                    joinRoom(roomId_s);
+                } catch (e){
+                    window.location.href = "/lobby";
+                }
+
+            }
+
+            function populateElements(){
+                var header = document.getElementById("sessionIdHolder").innerText = player_name + ":" + sessionId;
+            }
+
+            sessionId = localStorage.getItem("sessionId");
+            player_name = localStorage.getItem("name");
+            reconnect();
+            populateElements();
+        </script>
+    </body>
+    
+</html>
