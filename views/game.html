@@ -16,7 +16,7 @@
     </head>
     <body>
         <div class="d-flex flex-column m-2">
-            <h1 class="d-flex justify-content-center m-2"><a href="pandemic.jermintiu.com">Pandemic</a></h1>
+            <h1 class="d-flex justify-content-center m-2"><a href="/">Pandemic</a></h1>
 
             <h3 class="text-center mb-4" id="sessionIdHolder">ID:</h3>
 
@@ -127,6 +127,7 @@
                             alert("Game ended!");
                             var t = document.createElement("table");                                
                             var players = message;
+                            t.classList.add("table m-3")
                             t.innerHTML = "<tr><th>Name</th><th>ID</th><th>Vaccines</th><th>Status</th></tr>";
                             players.forEach(p => {
                                 var tr = document.createElement("tr");

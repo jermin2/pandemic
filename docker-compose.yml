@@ -5,7 +5,7 @@ services:
         image: jermin2/pandemic
         container_name: pandemic
         expose:
-            - 2567
+            - 80
         env_file: .env
         environment:
             VIRTUAL_HOST: ${HOST}
