@@ -3,30 +3,30 @@
     <head>
         <meta name="viewport" content="width=device-width" />
 
-        <style>
-
-        </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
 
         <!-- colyseus.js client -->
         <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
     </head>
     <body>
-        <h1> The Pandemic Game Lobby Room </h1>
-
-        <h2>All rooms:</h2>
-        <table>
-            <thead>
+        <div class="d-flex flex-column">
+        <h1 class="d-flex justify-content-center m-2">Pandemic</h1>
+        <h2 class="d-flex justify-content-center m-2"> Lobby Game</h2>
+        <h3 class="m-3">All rooms:</h3>
+        <table class="table table-hover m-3"> 
+            <thead class="thead-light">
                 <tr>
-                    <th>Game name</th>
-                    <th>CLients</th>
-                    <th>Join</th>
+                    <th scope="col">Game name</th>
+                    <th scope="col">Clients</th>
+                    <th scope="col">Join</th>
                 </tr>
             </thead>
             <tbody id="all_rooms"></tbody>
         </table>
         <div id="messages"></div>
         
-
+        </div>
         <script>
             var host = window.document.location.host.replace(/:.*/, '');
             var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
@@ -35,7 +35,6 @@
 
             function interact() {
                 var other_guy = document.getElementById("sessionid").value;
-                console.log(other_guy);
                 room.send("interact", {sessionId: other_guy })
             }
             
@@ -45,7 +44,6 @@
             client.joinOrCreate("lobby").then(room_instance => {
                 lobby = room_instance;
                 onjoin();
-                console.log("Joined lobby room!");
     
             }).catch(e => {
                 console.error("Error", e);
@@ -134,7 +132,7 @@
             }
 
             function joinById (roomId) {
-                client.joinById(roomId, {} ).then(room_instance => {
+                client.joinById(roomId, {playername: localStorage.getItem("name")} ).then(room_instance => {
                     
                     console.log("joined succesfully", room_instance);
                     room = room_instance;

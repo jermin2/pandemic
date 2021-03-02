@@ -2,6 +2,8 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
 
         <style>
             div.hidden {
@@ -13,45 +15,56 @@
         <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
     </head>
     <body>
-        <h1> The Pandemic Game</h1>
+        <div class="d-flex flex-column m-2">
+            <h1 class="d-flex justify-content-center m-2">Pandemic</h1>
 
-        <h2 id="sessionIdHolder">ID:</h2>
+            <h3 class="text-center mb-4" id="sessionIdHolder">ID:</h3>
 
-        <div id="waiting_message">
-            Waiting for Game to Start
-        </div>
-
-        <div class="hidden" id="initial_status_section">
-            <h2>YOU ARE</h2>
-            <h2 id="initial_status">INFECTED</h2>
-            <button type="button" onclick="hide_initial_status()">OK</button>
-        </div>
-
-        <div class="hidden" id="main">
-            <div id="qrcode">
-                QR CODE HERE
+            <div id="waiting_message">
+                Waiting for Game to Start
             </div>
-            or
-            <div id="manual_entry">
-                <input type="text" id="qr_entry">
-                <button type="button" onclick="interact()">Touch</button>
-            </div>
-        </div>>
-            
 
-        Messages:
-        <div id="messages"></div>
+            <div class="hidden text-center"  id="initial_status_section">
+                <h2>YOU ARE</h2>
+                <h2 id="initial_status">INFECTED</h2>
+                <button type="button" class="btn btn-primary" onclick="hide_initial_status()">OK</button>
+            </div>
+
+            <div class="hidden d-flex flex-column m-2 text-center" id="main">
+                <div class="text-center" id="qrcode">
+                    QR CODE HERE
+                </div>
+                or
+                <div id="manual_entry" class="mb-2">
+                    <input type="text" id="qr_entry">
+                    <button type="button" class="btn btn-secondary" onclick="interact()">Touch</button>
+                </div>
+
+                <button type="button" class="btn btn-primary m-auto " onclick="vaccine()" >Use Vaccine</button>
+            </div>>
+                
+
+            Messages:
+            <div id="messages"></div>
+        </div>
         
 
         <script>
             var host = window.document.location.host.replace(/:.*/, '');
             var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
+            
             var lobby;
             var room;
 
             var sessionId;
             var player_name;
             var roomId;
+
+            function vaccine() {
+                var c = confirm ("This will consume 1 vaccine, regardless if you are infected or not");
+                console.log(c);
+                room.send("vaccine",);
+            }
 
             function hide_initial_status() {
                 document.getElementById("initial_status_section").classList.add("hidden");
@@ -109,30 +122,58 @@
 
                         });
 
+                        room.onMessage("endGame", (message) => {
+                            // Game ended
+                            alert("Game ended!");
+                            var t = document.createElement("table");                                
+                            var players = message;
+                            t.innerHTML = "<tr><th>Name</th><th>ID</th><th>Vaccines</th><th>Status</th></tr>";
+                            players.forEach(p => {
+                                var tr = document.createElement("tr");
+                                tr.innerHTML = `<td> ${p.name} </td><td>${p.owner}</td><td> ${p.vaccines} </td><td> ${p.infected} </td>`;
+                                t.appendChild(tr);
+                            });
+
+                            var fs = document.createElement("h2")
+                            fs.innerText = "Final Score";
+                            document.getElementById("messages").appendChild(fs);
+                            document.getElementById("messages").appendChild(t);
+
+                            var button = document.createElement("button");
+                            button.innerHTML = "Go back to Lobby";
+                            document.getElementById("messages").appendChild(button);
+                            button.addEventListener("click", function() {
+                                window.location.href = "/lobby";
+                            })
+                            
+                        });
+
                         room.onMessage("interact", (message) => {
                             var m;
                             if(message.player1 == sessionId){
-                                m = message.player2;
+                                m = `${message.player2name}(${message.player2})`;
                             }
                             else if(message.player2 == sessionId){
-                                m = message.player1;
+                                m = `${message.player1name}(${message.player1})`;
                             } else return;
                             var p = document.createElement("p");
                             p.innerText = "You contacted " + m;
                             document.getElementById("messages").appendChild(p);
-                        })
+                        });
 
                         room.onMessage(sessionId, (message) => {
                             var p = document.createElement("p");
                             console.log(message)
                             p.innerText = message;
                             document.getElementById("messages").appendChild(p);
-                        })
+                        });
 
 
                     }).catch(e => {
                         console.log("Reconnect Failed");
                         console.error("Error", e);
+                        alert("Reconnect Failed, redirecting back to lobby");
+                        window.location.href = "/lobby";
                     });
                 } else {
                     //If roomId is not in storage, try to join normally

@@ -13,6 +13,18 @@ export class Player extends Schema{
 
   @type("string")
   owner: string; //contains the sessionId of the player
+
+  // If have more than one vaccine, and is infected, remove infection and reduce vaccines
+  useVaccine() {
+    if(this.vaccines > 0){
+      this.vaccines--;
+      if(this.infected == 1){
+        this.infected = 0;
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 export class MyRoomState extends Schema {
@@ -30,6 +42,8 @@ export class MyRoomState extends Schema {
   startingInfected: number = 1;
 
   player_interacts = new Set();
+
+  infected_players = new Array();
 
   // Returns the value to put in the Set
   getSetValue(sessionId: string, sessionId_2:string){
@@ -49,6 +63,7 @@ export class MyRoomState extends Schema {
     this.players.delete(sessionId);
   }
 
+  // Return a string message if stuff happened. Otherwise returns false
   playerInteract(sessionId: string, sessionId_2: string){
 
     if(sessionId == sessionId_2) return false // Can't touch yourself
@@ -59,6 +74,7 @@ export class MyRoomState extends Schema {
       return false;
     }
 
+    var msg = "";
     // If one player is infected and the other is normal, the normal is now infected
     // If the normal player had a vaccine, then the other player becomes normal
     // if both players are normal, then vaccine is created
@@ -75,34 +91,39 @@ export class MyRoomState extends Schema {
       if (player1.infected == 0){ //if player1 is normal
         if (player2.infected == 1){
           player1.infected = 1;
-          console.log(sessionId + " got infected");
+          msg = msg.concat(sessionId + " got infected; ");
   
           // If player 1 had vaccine, player2 gets cured
           if(player1.vaccines > 0){
             player2.infected = 0;
-            console.log(sessionId_2 + " got cured");
+            msg = msg.concat(sessionId_2 + " got cured; ");
             player1.vaccines--;
           }
           //if both were normal, increase the vaccines
         } else if (player2.infected == 0){
           player1.vaccines++;
           player2.vaccines++;
+          msg = msg.concat(sessionId_2, " and ", sessionId, " made contact");
         }
       } else if (player1.infected == 1){
         //assume player2 is not infected and player1 is infected
         if(player2.infected == 0){
           player2.infected = 1; // player2 becomes infected
-          console.log(sessionId_2 + " got infected");
+          msg = msg.concat(sessionId_2 + " got infected; ");
 
           if(player2.vaccines > 0){
             player1.infected = 0; //player1 gets cured
             player2.vaccines--;
           }
+          
         }
-        console.log(sessionId_2 + " and " + sessionId + " are both already infected");
+        else{
+          msg = msg.concat(sessionId_2 + " and " + sessionId + " are both already infected; ");
+        }
+        
       }
 
-      return true;
+      return msg;
 
     } catch (e) {
       console.log(e);
@@ -121,16 +142,22 @@ export class MyRoomState extends Schema {
     this.assignPlayers();
   }
 
+  endGame(){
+    this.gameState = "ended";
+  }
+
   assignPlayers(){
     console.log("assigning players");
     let x;
 
+    // Get a list of players, randomly assign some to be the starting infected
     let keys = Array.from(this.players);
     for( x=0; x < this.startingInfected; x++){
       let index = Math.floor(Math.random() * keys.length);
       let a = keys[index][0];
       this.players.get(a).infected = 1;
       console.log(a + " is infected!");
+      this.infected_players.push(this.players.get(a));
       keys.splice(index, 1)
 
       //console.log(a);
@@ -140,6 +167,7 @@ export class MyRoomState extends Schema {
   }
 
   showPlayers(){
+
     this.players.forEach((value, key) => {
       console.log("key =>", key)
       console.log("infected =>", value.infected)
