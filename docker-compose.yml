@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+    pandemic:
+        image: jermin2/pandemic
+        container_name: pandemic
+        ports:
+            - "80:2567"
+        env_file: .env
+        environment:
+            VIRTUAL_HOST: ${HOST}
+            LETSENCRYPT_HOST: ${HOST}
+        networks:
+            nginx-proxy:
+                
+networks:
+    nginx-proxy:
+        external: true
