@@ -1,15 +1,15 @@
 {
   "private": true,
-  "name": "my-app",
+  "name": "pandemic",
   "version": "1.0.0",
-  "description": "npm init template for bootstrapping an empty Colyseus project",
+  "description": "Implementation of the Pandamic game from Liar Game",
   "main": "lib/index.js",
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "loadtest": "colyseus-loadtest loadtest/example.ts --room my_room --numClients 2",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Jermin Tiu",
   "license": "UNLICENSED",
   "bugs": {
     "url": "https://github.com/colyseus/create-colyseus/issues"
