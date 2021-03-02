@@ -10,12 +10,22 @@
 <body>
     <div class="d-flex flex-column justify-content-center align-items-center p-2">
         <h1>Pandemic</h1>
-
-        <div>Enter Name</div>
-
-        
+        <i>An implementation of the Pandemic game from the "Liar Game"</i>
+        <div class="mt-4">Enter Name</div>
         <input type="text" id="name">
         <button type="button" class="btn btn-primary m-2" onclick="findGames()">Find Games</button>
+
+        <div class="justify-content-left">
+        <h3 class="m-3">Rules</h3>
+        <p>There are infected and normal people. This will be randomly assigned at the start</p>
+        <p>If a "normal" contacts another "normal", they will each gain one vaccine</p>
+        <p>If an "infected" contacts a "normal", the normal will become infected. <br/>In addition, if the normal has any vaccines they will lose one and the infected will become normal.</p>
+        <p>If an "infected" contacts another "infected", nothing will happen</p>
+        <p>If an "infected" uses their vaccine, they will lose a vaccine and become normal</p>
+        <p>If a normal uses their vaccine, they will just waste it</p>
+        <p>You can only make contact with each person once</p>
+        <p><b>The winner is the one with the most vaccines at the end</b></p>
+        </div>
     </div>
     <script>
         function findGames() {
