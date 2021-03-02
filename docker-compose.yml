@@ -4,8 +4,8 @@ services:
     pandemic:
         image: jermin2/pandemic
         container_name: pandemic
-        ports:
-            - "80:2567"
+        expose:
+            - 2567
         env_file: .env
         environment:
             VIRTUAL_HOST: ${HOST}
