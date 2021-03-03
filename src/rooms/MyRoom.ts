@@ -140,6 +140,7 @@ export class MyRoom extends Room {
       delete this.state.players[client.sessionId];
     }
     client.send("status", "welcome back!");
+    client.send("adminTest", this.admin);
   }
 
   onDispose() {

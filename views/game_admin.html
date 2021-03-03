@@ -131,6 +131,19 @@
                     this.message(message);
                 })
 
+                room.onMessage("adminTest", (message) => {
+                    console.log("admin test");
+                    var sp = localStorage.getItem("adminpassword");
+                    console.log(message);
+                    if (sp == message){
+                        console.log("you are an admin now");
+                        
+                    } else {
+                        console.log("you fake admin");
+                        window.location.href = "/game"; //get out of here!
+                    }
+                })
+
                 // Receive interactions from the server
                 room.onMessage("interact", (message) => {
                     console.log("Interact: " + message);
