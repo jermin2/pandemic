@@ -191,7 +191,10 @@
 
                     console.log("creating a new game");
 
-                    client.create("game", {name: gameName, password: gamePassword }).then(room => {
+                    var ap = Math.random().toString(36).substr(2, 5); //Create random admin password
+                    localStorage.setItem("adminpassword", ap);
+
+                    client.create("game", {name: gameName, password: gamePassword, admin: ap }).then(room => {
                         this.room = room;
                         localStorage.setItem("sessionId", room.sessionId);
                         localStorage.setItem("roomId", room.id);

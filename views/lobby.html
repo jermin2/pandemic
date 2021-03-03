@@ -159,6 +159,7 @@
 
             function joinRoom (roomId) {
 
+                
                 // Check to see if the room id is in storage
                 var roomId_s = localStorage.getItem("roomId");
                 var sessionId = localStorage.getItem("sessionId");
@@ -195,7 +196,8 @@
             }
 
             function joinById (roomId) {
-                client.joinById(roomId, {playername: localStorage.getItem("name")} ).then(room_instance => {
+                var password = window.prompt("Enter password: ");
+                client.joinById(roomId, {playername: localStorage.getItem("name"), password: password} ).then(room_instance => {
                     
                     console.log("joined succesfully", room_instance);
                     room = room_instance;

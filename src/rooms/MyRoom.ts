@@ -4,11 +4,16 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 
 export class MyRoom extends Room {
 
+  admin = "admin";
+  password = "password";
+  
   onCreate (options: any) {
 
-    this.setMetadata( { name: options.name, password: options.password });
+    this.setMetadata( { name: options.name });
 
     console.log("Room created", options);
+    this.admin = options.admin;
+    this.password = options.password;
 
     this.setState(new MyRoomState());
 
@@ -83,10 +88,16 @@ export class MyRoom extends Room {
   }
 
   onAuth(client: Client, options: any, req: any){
-    return true;
+    console.log("onAuth");
+    console.log(options);
+
+    if(options.password == this.password)
+      return true;
+    return false;
   }
 
   onJoin (client: Client, options: any) {
+    console.log(this.admin);
     console.log(client.sessionId + " joined");
     console.log(options);
     if (options.playername)
