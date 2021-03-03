@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+
+        <style>
+
+        </style>
+
+        <!-- colyseus.js client -->
+        <script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
+    </head>
+    <body>
+        <div class="d-flex flex-column m-2">
+            <h1 class="d-flex justify-content-center m-2"><a href="/lobby">Pandemic</a></h1>
+
+            <h4>
+            <div class="text-center mb-4" id="heading"></div>
+            </h4>
+
+            <button class="btn btn-secondary m-auto" onclick="leaveGame()">Leave Game</button>
+
+            <div id="game-options" class="m-auto" >
+                Options
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Starting Infected</span>
+                    </div>
+                    <input type="text" class="form-control" id="starting-infected" aria-describedby="basic-addon3">
+                </div>
+            </div>
+
+            <div id="game-controls" class="m-auto">
+                Game controls
+                <div class="d-flex justify-content-center m-auto">
+
+                    <button class="btn btn-warning m-2">Waiting</button>
+                    <button class="btn btn-success m-2" onclick="startGame()">Start Game</button>
+                    <button class="btn btn-danger m-2" onclick="endGame()">End Game</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <h2>Messages</h2>
+                    <div id="messages"></div>
+                </div>
+
+                <div class="col">
+                    <h3>Players</h3>
+                    <table class="table" id="players">
+
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            var host = window.document.location.host.replace(/:.*/, '');
+            var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
+            var lobby;
+            var room;
+            var allRooms;
+
+            function startGame() {
+                var si = Number(document.getElementById("starting-infected").value || 1);
+                room.send("state", {new_state: "startGame", starting_infected: si});
+
+            }
+
+            function endGame() {
+                room.send("state", {new_state: "endGame"});
+            }
+
+            function restartServer() {
+                //for each room
+                console.log(allRooms);
+                allRooms.forEach( r=>
+                    console.log(r.roomId)
+                );
+                
+            }
+            
+
+            function message(msg) {
+                var p = document.createElement("p");
+                p.innerText = msg;
+                document.getElementById("messages").appendChild(p);
+            }
+
+
+            function joinRoom (roomId) {
+
+                // Check to see if the room id is in storage
+                var roomId_s = localStorage.getItem("roomId");
+                var sessionId = localStorage.getItem("sessionId");
+
+                client.reconnect(roomId, sessionId).then(room_instance => {
+                    this.room = room_instance;
+
+                    localStorage.setItem("roomId", room.id);
+                    localStorage.setItem("sessionId", room.sessionId);
+
+                    console.log("reconnected successfully");
+
+                    this.attachListeners(room_instance);
+                }).catch(e => {
+                    console.log(e);
+                    alert("Failed to reconnect");
+                    window.location.href = "/lobby";
+                });
+            }
+
+            function leaveGame () {
+                try {
+                    this.room.leave();
+                    console.log("Left Room");
+
+                    window.location.href = "/lobby";
+                } catch (e){
+                    console.log(e);
+                }
+            }
+
+            function attachListeners(room){
+                // Receive messages from the server
+                room.onMessage("messages", (message) => {
+                    console.log("Message: " + message);
+                    this.message(message);
+                })
+
+                // Receive interactions from the server
+                room.onMessage("interact", (message) => {
+                    console.log("Interact: " + message);
+                    this.message(`${message.player1name}(${ message.player1 }) touched ${message.player2name}(${ message.player2}) `);
+                })
+
+                // Receive admin messages
+                room.onMessage("admin", (message) => {
+                console.log("Message: " + message);
+                this.message(JSON.stringify(message));
+                })
+
+                // Update the state changes
+                room.onStateChange((state) => {
+                    console.log("the room state has been updated:", state);
+                    if (state.gameState == "started"){
+                        this.message("Game Started");
+                        document.getElementById("starting-infected").setAttribute("disabled", true);
+                    }
+                    if (state.gameState == "inProgress"){
+                        // handle reconnect
+                    }
+
+                    // if players updated?
+                    var t = document.getElementById("players");
+                    t.innerHTML = "";
+                    var th = document.createElement("tr");
+                    th.innerHTML = "<th scope='col'>Name</th><th scope='col'>Vaccines</th><th scope='col'>Infected</th>";
+                    t.appendChild(th);
+                    state.players.forEach( p => {
+
+                        var tr = document.createElement("tr");
+                        tr.innerHTML = `<td>${p.name}(${p.owner})</td><td>${p.vaccines}</td><td>${p.infected}</td>`
+
+                        t.appendChild(tr);
+                    })
+
+                });
+            }
+
+            function createNewGame(){
+
+                //Check to see if we had already created this room
+                var roomId = localStorage.getItem("roomId");
+
+                if (roomId != null) {
+                    try {
+                        console.log("trying to reconnect")
+                        joinRoom(roomId);
+                    } catch (e) {
+                        alert("Failed to reconnect");
+                        window.location.href = "/lobby";
+                    }
+                } else{
+
+                    gameName = localStorage.getItem("gameName");
+                    gamePassword = localStorage.getItem("gamePassword");
+
+                    console.log("creating a new game");
+
+                    client.create("game", {name: gameName, password: gamePassword }).then(room => {
+                        this.room = room;
+                        localStorage.setItem("sessionId", room.sessionId);
+                        localStorage.setItem("roomId", room.id);
+
+                        console.log("joined the room", room);
+
+                        this.attachListeners(room);
+
+                    })
+
+                }
+            }
+
+            function showHeader() {
+                var d = document.getElementById("heading");
+                d.innerHTML = "Name: " + localStorage.getItem("gameName") + " : " + "Password: " + localStorage.getItem("gamePassword");
+            }
+
+            // Should create a game automatically
+            createNewGame();
+            showHeader();
+        </script>
+    </body>
+    
+</html>

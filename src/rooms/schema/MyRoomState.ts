@@ -137,8 +137,9 @@ export class MyRoomState extends Schema {
     this.startingInfected = num;
   }
 
-  startGame(){
+  startGame(starting_infected: number){
     this.gameState = "assign";
+    this.startingInfected = starting_infected;
     this.assignPlayers();
   }
 
@@ -147,6 +148,11 @@ export class MyRoomState extends Schema {
   }
 
   assignPlayers(){
+
+    //Error check the starting_infected
+    if (this.startingInfected > this.players.size){
+      this.startingInfected = 1;
+    }
     console.log("assigning players");
     let x;
 

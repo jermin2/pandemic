@@ -5,6 +5,9 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 export class MyRoom extends Room {
 
   onCreate (options: any) {
+
+    this.setMetadata( { name: options.name, password: options.password });
+
     console.log("Room created", options);
 
     this.setState(new MyRoomState());
@@ -16,7 +19,7 @@ export class MyRoom extends Room {
       if(message.new_state == "startGame"){
         console.log("Room locked, no new players can enter");
         this.lock();
-        this.state.startGame();
+        this.state.startGame(message.starting_infected);
         this.broadcast("message", "Game Start");
         this.broadcast("admin", this.state.infected_players);
       } else if (message.new_state == "endGame"){
@@ -42,13 +45,6 @@ export class MyRoom extends Room {
       }
 
       
-    })
-
-    this.onMessage("showPlayers", (client, message) => {
-      //this.state.showPlayers();
-      this.state.players.forEach((value: any, key: any) => {
-        this.broadcast("admin", `${value.name} id:${key}  Infected:${value.infected} Vaccines:${value.vaccines}`);
-      });
     })
 
     this.onMessage("interact", (client, data) => {

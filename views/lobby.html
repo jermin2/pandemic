@@ -11,7 +11,7 @@
     </head>
     <body>
         <div class="d-flex flex-column">
-        <h1 class="d-flex justify-content-center m-2"><a href="/">Pandemic</a></h1>
+        <h1 class="d-flex justify-content-center m-2"><a href="/lobby">Pandemic</a></h1>
         <h2 class="d-flex justify-content-center m-2"> Lobby Game</h2>
         <h3 class="m-3">All rooms:</h3>
         <table class="table table-hover m-3"> 
@@ -27,11 +27,74 @@
         <div id="messages"></div>
         
         </div>
+
+
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createGameModal">
+            Create New Game
+        </button>
+        
+        <!-- Modal -->
+        <div class="modal fade" id="createGameModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Create Game: Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon3">Game Name</span>
+                        </div>
+                        <input type="text" class="form-control" id="game-name" aria-describedby="basic-addon3">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon3">Password</span>
+                        </div>
+                        <input type="text" class="form-control" id="game-password" aria-describedby="basic-addon3">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="createNewGame()">Create Game</button>
+                </div>
+            </div>
+            </div>
+        </div>
+
+
+
+
+
         <script>
             var host = window.document.location.host.replace(/:.*/, '');
             var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' + location.port : ''));
             var lobby;
             var room;
+
+            function createNewGame() {
+                console.log("create new game");
+                console.log(document.getElementById("game-name").value);
+                console.log(document.getElementById("game-password").value);
+                var gameName = document.getElementById("game-name").value;
+                var gamePassword = document.getElementById("game-password").value;
+
+                localStorage.setItem("gameName", gameName);
+                localStorage.setItem("gamePassword", gamePassword);
+                localStorage.removeItem("roomId");
+
+                window.location.href = "/game_admin";
+
+            }
+
+
+
 
             function interact() {
                 var other_guy = document.getElementById("sessionid").value;
@@ -87,7 +150,7 @@
             function update_full_list() {
             var el = document.getElementById('all_rooms');
             el.innerHTML = allRooms.map(function(room) {
-                 return "<tr><td> " + room.name + " </td><td> " + room.clients + " </td><td> " +  
+                 return "<tr><td> " + room.metadata.name + " </td><td> " + room.clients + " </td><td> " +  
                  "<button type='button' id='"+room.roomId+"' class='btn btn-primary' onclick='joinRoom(this.id)' >Join Game</button> " +
                  "</tr>";
             }).join("\n");
@@ -160,6 +223,10 @@
 
             joinLobby();
         </script>
+
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     </body>
     
 </html>

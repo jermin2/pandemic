@@ -46,6 +46,10 @@ app.use('/game', function(req,res) {
   res.render('game.html');
 })
 
+app.use('/game_admin', function(req,res) {
+  res.render('game_admin.html');
+})
+
 app.get('/admin', function(req, res) {
   res.render('admin.html');
 });
