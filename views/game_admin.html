@@ -36,6 +36,13 @@
                     </div>
                     <input type="text" class="form-control" id="starting-rooms" aria-describedby="basic-addon3">
                 </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Status Checks</span>
+                    </div>
+                    <input type="text" class="form-control" id="starting-checks" aria-describedby="basic-addon3">
+                </div>
+
             </div>
 
             <div id="game-controls" class="m-auto">
@@ -82,7 +89,8 @@
             function startGame() {
                 var si = Number(document.getElementById("starting-infected").value || 1);
                 var sr = Number(document.getElementById("starting-rooms").value || 1);
-                room.send("state", {new_state: "startGame", starting_infected: si, starting_rooms: sr});
+                var checks = Number(document.getElementById("starting-checks").value || -1);
+                room.send("state", {new_state: "startGame", starting_infected: si, starting_rooms: sr, starting_checks: checks});
 
             }
 
@@ -111,8 +119,9 @@
                 // Check to see if the room id is in storage
                 var roomId_s = localStorage.getItem("roomId");
                 var sessionId = localStorage.getItem("sessionId");
-
+                console.log("game_admin reconnecting")
                 client.reconnect(roomId, sessionId).then(room_instance => {
+                    
                     this.room = room_instance;
 
                     localStorage.setItem("roomId", room.id);
@@ -121,9 +130,12 @@
                     console.log("reconnected successfully");
 
                     this.attachListeners(room_instance);
+
+                    room_instance.send("admin", {admin_mode: true});
                 }).catch(e => {
+                    
+                    alert("Failed to reconnect 1");
                     console.log(e);
-                    alert("Failed to reconnect");
                     window.location.href = "/lobby";
                 });
             }
@@ -132,7 +144,8 @@
                 try {
                     this.room.leave();
                     console.log("Left Room");
-
+                    localStorage.removeItem("sessionId");
+                    localStorage.removeItem("roomId");
                     window.location.href = "/lobby";
                 } catch (e){
                     console.log(e);
@@ -147,9 +160,7 @@
                 })
 
                 room.onMessage("adminTest", (message) => {
-                    console.log("admin test");
                     var sp = localStorage.getItem("adminpassword");
-                    console.log(message);
                     if (sp == message){
                         console.log("you are an admin now");
                         
@@ -186,12 +197,12 @@
                     var t = document.getElementById("players");
                     t.innerHTML = "";
                     var th = document.createElement("tr");
-                    th.innerHTML = "<th scope='col'>Name</th><th scope='col'>Vaccines</th><th scope='col'>Infected</th>";
+                    th.innerHTML = "<th scope='col'>Name</th><th scope='col'>Vaccines</th><th scope='col'>Infected</th><th scope='col'>Checks Available</th>";
                     t.appendChild(th);
                     state.players.forEach( p => {
 
                         var tr = document.createElement("tr");
-                        tr.innerHTML = `<td>${p.name}(${p.owner})</td><td>${p.vaccines}</td><td>${p.infected}</td>`
+                        tr.innerHTML = `<td>${p.name}(${p.owner})</td><td>${p.vaccines}</td><td>${p.infected}</td><td>${p.checks_available}</td>`
 
                         t.appendChild(tr);
                     })
@@ -225,7 +236,7 @@
                         console.log("trying to reconnect")
                         joinRoom(roomId);
                     } catch (e) {
-                        alert("Failed to reconnect");
+                        alert("Failed to reconnect 2");
                         window.location.href = "/lobby";
                     }
                 } else{

@@ -19,7 +19,7 @@
             <h1 class="d-flex justify-content-center m-2"><a href="/lobby">Pandemic</a></h1>
 
             <h3 class="text-center mb-4" id="sessionIdHolder">ID:</h3>
-
+            <h3 class="text-center mb-4"><button type="button" class="btn btn-secondary" onclick="leaveGame()">Leave Game</button></h3>
             <div class="text-center" id="waiting_message">
                 <h4>Waiting for Game to Start</h4>
             </div>
@@ -49,6 +49,10 @@
                         <div id="status-rooms" class="btn-group">
                             <button type="button" class="btn btn-secondary m-auto" id="status-button" onclick="checkstatus(0)">0</button>
                         </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="row"><b>Checks Available</b></label>
+                        <label class="row justify-content-center" id="checks-available"></label>
                     </div>
                     <div class="col-6 col-md-3 m-auto">
                         <button type="button" class="btn btn-primary m-auto" onclick="vaccine()" >Use Vaccine</button>
@@ -197,6 +201,8 @@
 
                                 localStorage.setItem("numberRooms", state.startingRooms);
                                 this.recreateRooms();
+
+                                document.getElementById("checks-available").innerText = room.state.players.get(sessionId).checks_available;
                                 
                             }
                             if (state.gameState == "inProgress"){
@@ -220,8 +226,7 @@
                                 localStorage.setItem("inRoom", message.room);
                                 this.message("You are in status room " + (message.room+1));
                                 this.message(`Vaccines: ${message.status.vaccines}  Infected: ${message.status.infected==1}`);
-                                this.updateRooms(true);
-                                
+                                this.updateRooms(true);                               
                             }
 
                             if(message.failed){
@@ -233,6 +238,9 @@
                                 this.message("you left a status room");
                                 this.updateRooms(false);
                             }
+
+                            //update checks available
+                            document.getElementById("checks-available").innerText = message.checks_available;
                         })
 
                         room.onMessage("endGame", (message) => {
@@ -294,13 +302,13 @@
                         console.log("Reconnect Failed");
                         console.error("Error", e);
                         alert("Reconnect Failed, redirecting back to lobby");
+                        localStorage.removeItem("sessionId");
+                        localStorage.removeItem("roomId");
                         window.location.href = "/lobby";
                     });
                 } else {
                     //If roomId is not in storage, try to join normally
                 }
-
-                console.log("Joined room")
 
             }
 
@@ -315,9 +323,28 @@
                     var roomId_s = localStorage.getItem("roomId");
                     joinRoom(roomId_s);
                 } catch (e){
+                    alert("shouldn't reach here");
+                    localStorage.removeItem("sessionId");
+                    localStorage.removeItem("roomId");
                     window.location.href = "/lobby";
                 }
 
+            }
+
+            function leaveGame () {
+                if(confirm("Exit this game? You will not be able to return"))
+                {
+                    try {
+                        this.room.leave();
+                        console.log("Left Room");
+                        localStorage.removeItem("sessionId");
+                        localStorage.removeItem("roomId");
+
+                        window.location.href = "/lobby";
+                    } catch (e){
+                        console.log(e);
+                    }
+                }
             }
 
             function populateElements(){
@@ -325,9 +352,14 @@
             }
 
             sessionId = localStorage.getItem("sessionId");
+
+            if(localStorage.getItem("name") == null){
+                localStorage.setItem("name") == "Noob123";
+            }
             player_name = localStorage.getItem("name");
             reconnect();
             populateElements();
+
         </script>
     </body>
     

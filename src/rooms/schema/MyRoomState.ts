@@ -11,6 +11,9 @@ export class Player extends Schema{
   @type("string")
   name: string = "";
 
+  @type("number")
+  checks_available: number = 0;
+
   @type("string")
   owner: string; //contains the sessionId of the player
 
@@ -65,6 +68,10 @@ export class MyRoomState extends Schema {
   moveIntoRoom(sessionId: string, room: number){
 
     this.gameState = "inProgress";
+    var player = this.players.get(sessionId);
+
+    if(player.checks_available == 0) return false; //if no more checks. if -1 means unlimited
+
     //console.log("move into room: " + room);
     // If there is someone in the room, return false
     if(this.statusRooms[room] != "-1"){
@@ -73,6 +80,8 @@ export class MyRoomState extends Schema {
       // Otherwise set the sessionId to the room and return true
       this.statusRooms[room] = sessionId;
       this.occupiedRooms++;
+      if(player.checks_available > 0)
+        player.checks_available--; //reduce checks available if greator than 0
       //console.log("success");
       return true;
     }
@@ -193,12 +202,15 @@ export class MyRoomState extends Schema {
     this.startingInfected = num;
   }
 
-  startGame(starting_infected: number, starting_rooms: number){
+  startGame(starting_infected: number, starting_rooms: number, starting_checks: number){
     this.gameState = "assign";
     // Setup the rooms
     this.startingRooms = starting_rooms;
     this.setupRooms(starting_rooms);
 
+    this.players.forEach( p => {
+      p.checks_available = starting_checks;
+    })
 
     this.startingInfected = starting_infected;
     this.assignPlayers();

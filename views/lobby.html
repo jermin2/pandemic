@@ -218,6 +218,7 @@
                     localStorage.setItem("roomId", room.id);
                     localStorage.setItem("sessionId", room.sessionId);
                     console.log("new session id is: " + room.sessionId);
+
                     window.location.href = "/game";
                 }).catch(e => {
                     console.error("join error", e);

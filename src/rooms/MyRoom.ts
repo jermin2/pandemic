@@ -18,6 +18,14 @@ export class MyRoom extends Room {
 
     this.setState(new MyRoomState());
 
+    this.onMessage("admin", (client, message) => {
+      //If an admin has joined, remove the player
+      if(message.admin_mode){
+        console.log("remove admin player" + client.sessionId);
+        this.state.players.delete(client.sessionId);
+      }
+        
+    })
     this.onMessage("type", (client, message) => {
     });
 
@@ -32,7 +40,7 @@ export class MyRoom extends Room {
         console.log("Room locked, no new players can enter");
         this.lock();
 
-        this.state.startGame(message.starting_infected, message.starting_rooms);
+        this.state.startGame(message.starting_infected, message.starting_rooms, message.starting_checks);
         this.broadcast("message", "Game Start");
         this.broadcast("admin", this.state.infected_players);
 
@@ -91,23 +99,27 @@ export class MyRoom extends Room {
     })
 
     this.onMessage("checkStatus", (client, data) => {
+
+      var name = this.getName(client.sessionId);
+      var checks_available = this.state.players.get(client.sessionId).checks_available;
       if(data.room < this.state.startingRooms){
         // check if its free
+
         var r = this.state.moveIntoRoom(client.sessionId, data.room);
         if(r){
           // If successfully moved into room
-          this.broadcast("admin", `${this.getName(client.sessionId)} moved into room ${data.room}`);
-          client.send("checkstatus", {inRoom: true, status: this.state.players.get(client.sessionId), room: data.room});
+          this.broadcast("admin", `${name} moved into room ${data.room}`);
+          client.send("checkstatus", {inRoom: true, status: this.state.players.get(client.sessionId), room: data.room, checks_available: checks_available} );
         } else { //return failed if couldn't get in room. is it occupied?
-          client.send("checkstatus", {failed: true});
+          client.send("checkstatus", {failed: true, checks_available: checks_available});
         }
       }
       if(data.action == "leave"){
         var s = this.state.moveOutofRoom(client.sessionId);
 
         if(s != -1){
-          this.broadcast("admin", `${this.getName(client.sessionId)} has left room ${s}`);
-          client.send("checkstatus", {leftRoom: true});
+          this.broadcast("admin", `${name} has left room ${s}`);
+          client.send("checkstatus", {leftRoom: true, checks_available: checks_available});
         }
 
       }
@@ -124,8 +136,6 @@ export class MyRoom extends Room {
   }
 
   onAuth(client: Client, options: any, req: any){
-    console.log("onAuth");
-    console.log(options);
 
     if(options.password == this.password)
       return true;
@@ -154,8 +164,8 @@ export class MyRoom extends Room {
 
   async onLeave (client: Client, consented?: boolean) {
     console.log(client.sessionId, "left", { consented });
-    // flag client as inactive for other users
-    this.state.players[client.sessionId].connected = false; 
+    // flag client as inactive for other users - Should probably handle this at some point
+    //this.state.players[client.sessionId].connected = false; 
 
     //remove the client from any rooms
     this.state.moveOutofRoom(client.sessionId);
@@ -171,7 +181,7 @@ export class MyRoom extends Room {
       console.log("Reconnected!");
 
       // client returned! let's re-activate it
-      this.state.players[client.sessionId].connected = true;
+      //this.state.players[client.sessionId].connected = true;
 
     } catch (e) {
 
