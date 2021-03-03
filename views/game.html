@@ -105,7 +105,6 @@
 
                 console.log(numRooms);
                 for (let r=0; r< numRooms; r++){
-                    console.log(r);
                     b = document.createElement("button");
                     b.setAttribute("type", "button");
                     b.classList.add("btn");
@@ -122,7 +121,7 @@
             }
 
             function updateAllRooms(rooms){
-                console.log("update all rooms");
+                //console.log("update all rooms");
                 rooms.forEach( (v,i) => {
                     if(v != "-1"){ //if the room is occupied
                         if(v != localStorage.getItem("sessionId") ){ //by someone other than me
@@ -177,7 +176,7 @@
 
                         // Listen to patches from server
                         room.onStateChange((state) => {
-                            console.log("the room state has been updated:", state);
+                            //console.log("the room state has been updated:", state);
                             if (state.gameState == "started"){
                                 // change the waiting for game to start to hidden
                                 document.getElementById("waiting_message").classList.add("d-none");
@@ -197,7 +196,7 @@
                                 document.getElementById("waiting_message").classList.add("d-none");
                                 document.getElementById("initial_status_section").classList.add("d-none");
                                 document.getElementById("main").classList.remove("d-none");
-                                console.log(state.statusRooms);
+                                //console.log(state.statusRooms);
                                 this.updateAllRooms(state.statusRooms);
                             }
 

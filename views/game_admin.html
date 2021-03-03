@@ -55,10 +55,19 @@
                 </div>
 
                 <div class="col">
-                    <h3>Players</h3>
-                    <table class="table" id="players">
+                    <div class="row">
+                        <h3>Rooms</h3>
+                        <table class="table" id="rooms">
 
-                    </table>
+                        </table>
+                    </div>
+                
+                    <div class="row">
+                        <h3>Players</h3>
+                        <table class="table" id="players">
+
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,6 +194,22 @@
                         tr.innerHTML = `<td>${p.name}(${p.owner})</td><td>${p.vaccines}</td><td>${p.infected}</td>`
 
                         t.appendChild(tr);
+                    })
+
+                    var room_table = document.getElementById("rooms");
+                    room_table.innerHTML = "";
+                    var room_table_tr = document.createElement("tr");
+                    room_table_tr.innerHTML = "<th scope='col'>Room</th><th>Occupant</th>";
+                    room_table.appendChild(room_table_tr);
+                    state.statusRooms.forEach( (v,i) => {
+                        var rt_tr = document.createElement("tr");
+                        if(v != -1){
+                            rt_tr.innerHTML = `<th>${i}</th><td>${state.players.get(v).name}(${v})</td>`;
+                        } else {
+                            rt_tr.innerHTML = `<th>${i}</th><td>free</td>`;
+                        }
+                        
+                        room_table.appendChild(rt_tr);
                     })
 
                 });
