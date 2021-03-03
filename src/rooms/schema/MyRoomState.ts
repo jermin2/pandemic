@@ -1,4 +1,4 @@
-import { Schema, MapSchema, type } from "@colyseus/schema";
+import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
 import { Client } from "colyseus.js";
 
 export class Player extends Schema{
@@ -41,9 +41,59 @@ export class MyRoomState extends Schema {
   @type("number")
   startingInfected: number = 1;
 
+  @type(["string"])
+  statusRooms = new ArraySchema<string>();
+
+  @type("number")
+  startingRooms: number = 1;
+
+  @type("number")
+  occupiedRooms: number = 0;
+
   player_interacts = new Set();
 
   infected_players = new Array();
+
+  setupRooms(num: number){
+    for(let i=0; i<num; i++){
+      this.statusRooms[i] = "-1";
+    }
+    console.log("setuprooms");
+    console.log(this.statusRooms);
+  }
+
+  moveIntoRoom(sessionId: string, room: number){
+
+    this.gameState = "inProgress";
+    //console.log("move into room: " + room);
+    // If there is someone in the room, return false
+    if(this.statusRooms[room] != "-1"){
+      return false;
+    } else {
+      // Otherwise set the sessionId to the room and return true
+      this.statusRooms[room] = sessionId;
+      this.occupiedRooms++;
+      //console.log("success");
+      return true;
+    }
+  }
+
+  // Move out of the status checking room. Find the room they are occupying. 
+  // Remove them from room. If can't find them, return -1
+  moveOutofRoom(sessionId: string){
+    
+    var i = this.statusRooms.indexOf(sessionId);
+
+    //console.log("move out of room:" + i);
+    if( i == -1){
+      return -1; //not in a room
+    } else {
+      this.statusRooms[i] = "-1";
+      this.occupiedRooms--;
+      //console.log("success");
+      return i;
+    }
+  }
 
   // Returns the value to put in the Set
   getSetValue(sessionId: string, sessionId_2:string){
@@ -68,6 +118,12 @@ export class MyRoomState extends Schema {
 
     if(sessionId == sessionId_2) return false // Can't touch yourself
 
+    console.log("check if player in room");
+    //If player is in a room, can't touch
+    if(this.statusRooms.indexOf(sessionId) > -1) return false;
+    if(this.statusRooms.indexOf(sessionId_2) > -1) return false;
+
+    console.log("player not in room");
     var k = this.getSetValue(sessionId, sessionId_2);
     if(this.player_interacts.has(k)){
       //They have already interacted, don't do anything
@@ -137,10 +193,18 @@ export class MyRoomState extends Schema {
     this.startingInfected = num;
   }
 
-  startGame(starting_infected: number){
+  startGame(starting_infected: number, starting_rooms: number){
     this.gameState = "assign";
+    // Setup the rooms
+    this.startingRooms = starting_rooms;
+    this.setupRooms(starting_rooms);
+
+
     this.startingInfected = starting_infected;
     this.assignPlayers();
+
+    console.log("finished setting up rooms");
+    
   }
 
   endGame(){
@@ -170,15 +234,6 @@ export class MyRoomState extends Schema {
     }
     this.gameState = "started";
     
-  }
-
-  showPlayers(){
-
-    this.players.forEach((value, key) => {
-      console.log("key =>", key)
-      console.log("infected =>", value.infected)
-      console.log("vaccines =>", value.vaccines)
-    });
   }
 
 

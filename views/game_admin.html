@@ -30,6 +30,12 @@
                     </div>
                     <input type="text" class="form-control" id="starting-infected" aria-describedby="basic-addon3">
                 </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">Status Rooms</span>
+                    </div>
+                    <input type="text" class="form-control" id="starting-rooms" aria-describedby="basic-addon3">
+                </div>
             </div>
 
             <div id="game-controls" class="m-auto">
@@ -66,7 +72,8 @@
 
             function startGame() {
                 var si = Number(document.getElementById("starting-infected").value || 1);
-                room.send("state", {new_state: "startGame", starting_infected: si});
+                var sr = Number(document.getElementById("starting-rooms").value || 1);
+                room.send("state", {new_state: "startGame", starting_infected: si, starting_rooms: sr});
 
             }
 
@@ -83,7 +90,6 @@
                 
             }
             
-
             function message(msg) {
                 var p = document.createElement("p");
                 p.innerText = msg;

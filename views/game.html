@@ -39,8 +39,16 @@
                     <input type="text" id="qr_entry">
                     <button type="button" class="btn btn-secondary" onclick="interact()">Touch</button>
                 </div>
-
-                <button type="button" class="btn btn-primary m-auto " onclick="vaccine()" >Use Vaccine</button>
+                <div class="row m-auto">
+                    <div class="col">
+                        <label class="row"><b>Status Rooms</b></label>
+                        <label class="row justify-content-md-center">Click to enter/exit</label>
+                        <div id="status-rooms" class="btn-group">
+                            <button type="button" class="btn btn-secondary m-auto" id="status-button" onclick="checkstatus(0)">0</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary m-auto col" onclick="vaccine()" >Use Vaccine</button>
+                </div>
             </div>
             
             >Messages:
@@ -59,6 +67,15 @@
             var player_name;
             var roomId;
 
+            var inStatusRoom = false;
+
+            function checkstatus(room_num) {
+                if(!inStatusRoom)
+                    room.send("checkStatus", {room: room_num}); //what status room you are in
+                else
+                    room.send("checkStatus", {action: "leave"}) //if you are in a room, then leave the room
+            }
+
             function vaccine() {
                 var c = confirm ("This will consume 1 vaccine, regardless if you are infected or not");
                 console.log(c);
@@ -75,6 +92,64 @@
                 room.send("interact", {sessionId: other_guy })
                 document.getElementById("qr_entry").value = "";
             }
+
+            function recreateRooms(){
+
+                numRooms = localStorage.getItem("numberRooms");
+
+                if(numRooms == null)
+                    return;
+                // Show the number of status rooms
+                d = document.getElementById("status-rooms");
+                d.innerHTML = "";
+
+                console.log(numRooms);
+                for (let r=0; r< numRooms; r++){
+                    console.log(r);
+                    b = document.createElement("button");
+                    b.setAttribute("type", "button");
+                    b.classList.add("btn");
+                    b.classList.add("btn-success");
+
+                    b.classList.add("m-2");
+                    b.setAttribute("id", `room-${r}`)
+                    b.addEventListener("click", function(){
+                        checkstatus(r);
+                    });
+                    b.innerText = (r+1);
+                    d.appendChild(b);
+                }
+            }
+
+            function updateAllRooms(rooms){
+                console.log("update all rooms");
+                rooms.forEach( (v,i) => {
+                    if(v != "-1"){ //if the room is occupied
+                        if(v != localStorage.getItem("sessionId") ){ //by someone other than me
+                            document.getElementById(`room-${i}`).setAttribute("disabled", true); //disabled it
+                        }
+                    } else{
+                            document.getElementById(`room-${i}`).removeAttribute("disabled");               
+                    }
+                });
+
+            }
+            // Update the room that you are in
+            function updateRooms(enteredRoom){
+                var r = localStorage.getItem("inRoom");
+                if(r == null)
+                    return;
+
+                if(enteredRoom){
+                    document.getElementById(`room-${r}`).classList.remove("btn-success");
+                    document.getElementById(`room-${r}`).classList.add("btn-primary");
+                } else {
+                    document.getElementById(`room-${r}`).classList.add("btn-success");
+                    document.getElementById(`room-${r}`).classList.remove("btn-primary");
+                    localStorage.removeItem("inRoom"); //clear the room from storage
+                }
+
+            }
             
 
             function joinRoom (roomId) {
@@ -89,7 +164,6 @@
                 if (roomId == roomId_s){
                     console.log("room id was found in storage, attempting reconnect");
                     
-                    
                     client.reconnect(roomId, sessionId).then(room_instance => {
                         room = room_instance;
 
@@ -98,6 +172,8 @@
                         sessionId = room.sessionId;
 
                         console.log("reconnected successfully");
+
+                        this.recreateRooms();
 
                         // Listen to patches from server
                         room.onStateChange((state) => {
@@ -111,15 +187,46 @@
                                 // Show the initial status
                                 document.getElementById("initial_status").innerText = infected?"INFECTED":"NORMAL";
                                 document.getElementById("initial_status_section").classList.remove("d-none");
+
+                                localStorage.setItem("numberRooms", state.startingRooms);
+                                this.recreateRooms();
+                                
                             }
                             if (state.gameState == "inProgress"){
                                 // handle reconnect
                                 document.getElementById("waiting_message").classList.add("d-none");
                                 document.getElementById("initial_status_section").classList.add("d-none");
                                 document.getElementById("main").classList.remove("d-none");
+                                console.log(state.statusRooms);
+                                this.updateAllRooms(state.statusRooms);
                             }
 
                         });
+
+                        // Check your personal status
+                        room.onMessage("checkstatus", (message) => {
+                            // If a room is free
+                            
+                            if(message.inRoom){
+                                this.inStatusRoom = true;
+                                //document.getElementById("status-button").innerText = "Leave Status Room";
+                                localStorage.setItem("inRoom", message.room);
+                                this.message("You are in status room " + (message.room+1));
+                                this.message(`Vaccines: ${message.status.vaccines}  Infected: ${message.status.infected==1}`);
+                                this.updateRooms(true);
+                                
+                            }
+
+                            if(message.failed){
+                                this.message("you failed to get in a room");
+                            }
+
+                            if(message.leftRoom){
+                                this.inStatusRoom = false;
+                                this.message("you left a status room");
+                                this.updateRooms(false);
+                            }
+                        })
 
                         room.onMessage("endGame", (message) => {
                             // Game ended
@@ -190,7 +297,11 @@
 
             }
 
-            
+            function message(msg) {
+                var p = document.createElement("p");
+                p.innerText = msg;
+                document.getElementById("messages").appendChild(p);
+            }
 
             function reconnect(){
                 try {
