@@ -21,13 +21,18 @@ export class MyRoom extends Room {
     this.onMessage("admin", (client, message) => {
       //If an admin has joined, remove the player
       if(message.admin_mode){
-        console.log("remove admin player" + client.sessionId);
-        this.state.players.delete(client.sessionId);
+        if(this.state.players.has(client.sessionId)){
+          console.log("remove admin player" + client.sessionId);
+          this.state.players.delete(client.sessionId);
+        }
+      }
+
+      if(message=="left"){
+        this.broadcast("message", "Admin closed room, please go back to lobby");
+        this.disconnect();
       }
         
     })
-    this.onMessage("type", (client, message) => {
-    });
 
     this.onMessage("state", (client, message) => {
       if(message.new_state == "startGame"){
@@ -62,8 +67,30 @@ export class MyRoom extends Room {
           else 
             return b.vaccines - a.vaccines; // vaccines are sorted descending
           });
+
+
         this.broadcast("endGame", players);
-        this.disconnect();
+
+        //this.disconnect();
+      } else if (message.msg == "refresh"){
+        this.state.dummy++;
+
+        if(this.state.gameState == "ended"){
+          var players = new Array();
+          this.state.players.forEach( (value:any, key:Player) => {
+            players.push(value);
+          });
+  
+          // Sort by the largest vaccines, tie broken by if infected or not
+          players.sort( function(a:Player,b:Player){
+            if(b.vaccines == a.vaccines){
+              return a.infected - b.infected; //infected is 1, so we want to sort ascending
+            }
+            else 
+              return b.vaccines - a.vaccines; // vaccines are sorted descending
+            });
+          client.send("endGame", players);
+        }
       }
 
       
@@ -127,8 +154,6 @@ export class MyRoom extends Room {
     })
 
 
-
-
   }
 
   getName(sessionId: any){
@@ -177,7 +202,10 @@ export class MyRoom extends Room {
 
       console.log("awaiting reconnection");
       // allow disconnected client to reconnect into this room until 20 seconds
-      await this.allowReconnection(client, 60);
+      if(this.state.gameState == "waiting")
+        await this.allowReconnection(client, 20); //reduce time for reconnection
+      else
+        await this.allowReconnection(client, 60); // allow client 60 seconds if past the waiting room
       console.log("Reconnected!");
 
       // client returned! let's re-activate it
@@ -186,7 +214,8 @@ export class MyRoom extends Room {
     } catch (e) {
 
       // 20 seconds expired. let's remove the client.
-      delete this.state.players[client.sessionId];
+      this.state.players.delete(client.sessionId);
+      //delete this.state.players[client.sessionId];
     }
     client.send("status", "welcome back!");
     client.send("adminTest", this.admin);

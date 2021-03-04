@@ -28,19 +28,19 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Starting Infected</span>
                     </div>
-                    <input type="text" class="form-control" id="starting-infected" aria-describedby="basic-addon3">
+                    <input type="text" class="form-control" id="starting-infected" aria-describedby="basic-addon3" value="1">
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Status Rooms</span>
                     </div>
-                    <input type="text" class="form-control" id="starting-rooms" aria-describedby="basic-addon3">
+                    <input type="text" class="form-control" id="starting-rooms" aria-describedby="basic-addon3" value="1">
                 </div>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text" id="basic-addon3">Status Checks</span>
                     </div>
-                    <input type="text" class="form-control" id="starting-checks" aria-describedby="basic-addon3">
+                    <input type="text" class="form-control" id="starting-checks" aria-describedby="basic-addon3" value="3">
                 </div>
 
             </div>
@@ -136,12 +136,14 @@
                     
                     alert("Failed to reconnect 1");
                     console.log(e);
-                    window.location.href = "/lobby";
+                    //window.location.href = "/lobby";
                 });
             }
 
             function leaveGame () {
                 try {
+                    
+                    room.send("admin", "left");
                     this.room.leave();
                     console.log("Left Room");
                     localStorage.removeItem("sessionId");
@@ -187,7 +189,12 @@
                     console.log("the room state has been updated:", state);
                     if (state.gameState == "started"){
                         this.message("Game Started");
+                        document.getElementById("starting-infected").setAttribute("value", state.startingInfected);
                         document.getElementById("starting-infected").setAttribute("disabled", true);
+                        document.getElementById("starting-rooms").setAttribute("value", state.startingRooms);
+                        document.getElementById("starting-rooms").setAttribute("disabled", true);
+                        document.getElementById("starting-checks").setAttribute("value", state.startingChecks);
+                        document.getElementById("starting-checks").setAttribute("disabled", true);
                     }
                     if (state.gameState == "inProgress"){
                         // handle reconnect

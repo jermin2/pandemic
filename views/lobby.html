@@ -171,8 +171,6 @@
             }
 
             function joinRoom (roomId) {
-
-                
                 // Check to see if the room id is in storage
                 var roomId_s = localStorage.getItem("roomId");
                 var sessionId = localStorage.getItem("sessionId");
@@ -191,7 +189,17 @@
                         localStorage.setItem("sessionId", room.sessionId);
 
                         console.log("reconnected successfully");
-                        window.location.href = "/game";
+
+                        if(localStorage.getItem("adminpassword") != null){
+                            
+                            console.log("try admin");
+                            window.location.href = "/game_admin";
+                        } else {
+                            window.location.href = "/game";
+                        }
+
+
+                        
                     }).catch(e => {
                         console.log("Reconnect Failed - attempting to join with new session");
                         console.error("Error", e);
@@ -209,7 +217,9 @@
             }
 
             function joinById (roomId) {
+                
                 var password = window.prompt("Enter password: ");
+
                 client.joinById(roomId, {playername: localStorage.getItem("name"), password: password} ).then(room_instance => {
                     
                     console.log("joined succesfully", room_instance);

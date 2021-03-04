@@ -36,7 +36,7 @@ export class MyRoomState extends Schema {
   mySynchronizedProperty: string = "Hello world";
 
   @type("string")
-  gameState: string;
+  gameState: string = "waiting";
 
   @type({ map: Player })
   players = new MapSchema<Player>();
@@ -44,14 +44,19 @@ export class MyRoomState extends Schema {
   @type("number")
   startingInfected: number = 1;
 
-  @type(["string"])
-  statusRooms = new ArraySchema<string>();
-
   @type("number")
   startingRooms: number = 1;
 
   @type("number")
-  occupiedRooms: number = 0;
+  startingChecks: number = 1;
+
+  @type(["string"])
+  statusRooms = new ArraySchema<string>();
+
+
+
+  @type("number")
+  dummy: number = 0;
 
   player_interacts = new Set();
 
@@ -79,7 +84,6 @@ export class MyRoomState extends Schema {
     } else {
       // Otherwise set the sessionId to the room and return true
       this.statusRooms[room] = sessionId;
-      this.occupiedRooms++;
       if(player.checks_available > 0)
         player.checks_available--; //reduce checks available if greator than 0
       //console.log("success");
@@ -98,7 +102,6 @@ export class MyRoomState extends Schema {
       return -1; //not in a room
     } else {
       this.statusRooms[i] = "-1";
-      this.occupiedRooms--;
       //console.log("success");
       return i;
     }
@@ -216,6 +219,7 @@ export class MyRoomState extends Schema {
     this.players.forEach( p => {
       p.checks_available = starting_checks;
     })
+    this.startingChecks = starting_checks;
 
     this.startingInfected = starting_infected;
     this.assignPlayers();
