@@ -132,6 +132,11 @@ export class MyRoomState extends Schema {
     if(this.statusRooms.indexOf(sessionId) > -1) return false;
     if(this.statusRooms.indexOf(sessionId_2) > -1) return false;
 
+    //check if player exists
+    if(this.players.get(sessionId) == null) return false;
+    if(this.players.get(sessionId_2) == null) return false;
+
+
     console.log("player not in room");
     var k = this.getSetValue(sessionId, sessionId_2);
     if(this.player_interacts.has(k)){
