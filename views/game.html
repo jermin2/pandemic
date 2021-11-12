@@ -93,7 +93,6 @@
 
             function vaccine() {
                 var c = confirm ("This will consume 1 vaccine, regardless if you are infected or not");
-                console.log(c);
                 room.send("vaccine",);
             }
 
@@ -192,7 +191,7 @@
 
                         // Listen to patches from server
                         room.onStateChange((state) => {
-                            console.log("the room state has been updated:", state);
+                            //console.log("the room state has been updated:", state);
                             if (state.gameState == "started"){
                                 // change the waiting for game to start to hidden
                                 document.getElementById("waiting_message").classList.add("d-none");
@@ -328,7 +327,7 @@
             function reconnect(){
                 try {
                     var roomId_s = localStorage.getItem("roomId");
-                    
+
                     joinRoom(roomId_s);
                 } catch (e){
                     alert("shouldn't reach here");

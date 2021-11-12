@@ -91,7 +91,7 @@
                 var sr = Number(document.getElementById("starting-rooms").value || 1);
                 var checks = Number(document.getElementById("starting-checks").value || -1);
                 room.send("state", {new_state: "startGame", starting_infected: si, starting_rooms: sr, starting_checks: checks});
-
+                console.log("start game pushed");
             }
 
             function endGame() {
