@@ -1,10 +1,8 @@
-# Welcome to Colyseus!
+# Pandemic
 
-This project has been created using [⚔️ `create-colyseus-app`](https://github.com/colyseus/create-colyseus-app/) - an npm init template for kick starting a Colyseus project in TypeScript.
-
-[Documentation](http://docs.colyseus.io/)
-
-## :crossed_swords: Usage
+An implementation of the Pandemic game from the "Liar Game"
+Built using colyseus framekwork for Node.js, Typescript
+## Features
 
 ```
 npm start
