@@ -2,11 +2,15 @@
 
 An implementation of the Pandemic game from the "Liar Game"
 Built using colyseus framekwork for Node.js, Typescript
-## Features
 
-```
-npm start
-```
+## How to play
+Full list of rules here:
+https://jermin-pandemic.herokuapp.com/
+
+
+## Features
+- Lobby where you can find games and play
+- Status room to check your status
 
 ## Structure
 
@@ -14,10 +18,6 @@ npm start
 - `src/rooms/MyRoom.ts`: an empty room handler for you to implement your logic
 - `src/rooms/schema/MyRoomState.ts`: an empty schema used on your room's state.
 - `loadtest/example.ts`: scriptable client for the loadtest tool (see `npm run loadtest`)
-- `package.json`:
-    - `scripts`:
-        - `npm start`: runs `ts-node-dev index.ts`
-        - `npm run loadtest`: runs the [`@colyseus/loadtest`](https://github.com/colyseus/colyseus-loadtest/) tool for testing the connection, using the `loadtest/example.ts` script.
 - `tsconfig.json`: TypeScript configuration file
 
 
