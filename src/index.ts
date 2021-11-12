@@ -3,9 +3,12 @@ import express from "express";
 import cors from "cors";
 import { Server, LobbyRoom } from "colyseus";
 import { monitor } from "@colyseus/monitor";
+import * as dotenv from 'dotenv';
 // import socialRoutes from "@colyseus/social/express"
 
 import { MyRoom } from "./rooms/MyRoom";
+
+dotenv.config();
 
 const port = Number(process.env.PORT || 80);
 const HOST = process.env.HOST||'jermin-pandemic.herokuapp.com';
