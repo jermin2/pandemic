@@ -10,7 +10,7 @@ import { MyRoom } from "./rooms/MyRoom";
 
 dotenv.config();
 
-const port = Number(process.env.PORT || 80);
+const port = Number(process.env.PORT || 4567);
 const HOST = process.env.HOST||'jermin-pandemic.herokuapp.com';
 const app = express()
 
