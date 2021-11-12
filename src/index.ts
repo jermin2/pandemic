@@ -7,8 +7,8 @@ import { monitor } from "@colyseus/monitor";
 
 import { MyRoom } from "./rooms/MyRoom";
 
-const port = Number(process.env.PORT || 2567);
-const HOST = process.env.HOST||'127.0.0.1';
+const port = Number(process.env.PORT || 80);
+const HOST = process.env.HOST||'jermin-pandemic.herokuapp.com';
 const app = express()
 
 app.use(cors());
